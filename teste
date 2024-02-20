@@ -1,0 +1,83 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import plotly.graph_objects as go
+import plotly.express as px
+import statsmodels.api as sum
+import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt
+
+base = pd.read_csv("comparacao ETFs.csv")
+base.index = base.Data.astype('datetime64[ns]')
+base.drop(columns= 'Data',inplace=True)
+base
+
+print(base.iloc[-1].sort_values(ascending=False))
+
+lista = ['CDI', 'IPCA', 'IPCA+6%', 'IBOV', 'IDIV', 'IFIX', 'SMLL',
+       'MSCI', 'SP500', 'IDA', 'IHFA', 'IMAB', 'IMAB5', 'SP500 em BRL',
+       'MSCI em BRL']
+
+renda_fixa = [ 'IDA', 'IHFA', 'CDI']
+
+renda_fixa2 = [ 'IDA', 'IHFA', 'IMAB', 'IMAB5', 'CDI']
+
+renda_var_br =  ['IBOV','SMLL']
+
+renda_var_br2 =  ['IBOV', 'IDIV', 'IFIX', 'SMLL']
+
+renda_var_ext =  [ 'SP500 em BRL','MSCI em BRL']
+
+px.line(base[["IBOV", 'IDIV', 'IFIX', 'SMLL', 'CDI', 'IDA', 'IHFA','IMAB', 'IMAB5','MSCI', 'SP500',  'SP500 em BRL', 'MSCI em BRL']])
+
+base['Fundo'].plot(figsize=(21,9))
+
+base[lista].pct_change().rolling(60).corr()['CDI']
+
+base_dados = pd.read_csv("Base de dados indices.csv")
+base_dados.index = base_dados.Data.astype('datetime64[ns]')
+base_dados.drop(columns='Data',inplace=True)
+base_dados
+
+base_dados = base_dados[["IBOV", 'IDIV', 'IFIX', 'SMLL', 'CDI', 'IDA', 'IHFA','IMAB', 'IMAB5','MSCI', 'SP500',  'SP500 em BRL', 'MSCI em BRL']]
+
+correl  = base_dados.pct_change().corr()
+
+fig,ax = plt.subplots(figsize=(16,9))
+mask = np.triu(np.ones_like(correl,dtype=bool),k = 1)
+sns.heatmap(correl, mask= mask , annot=True,cmap='Blues',vmax=1,vmin=-0.5, fmt ='.2f')
+plt.show()
+
+classe1 = base_dados[renda_dixa].sum(axis=1)
+
+classe2 = base_dados[renda_var_br].sum(axis=1)
+
+classe3 = base_dados[renda_var_ext].sum(axis=1)
+
+df_classes = pd.DataFrame(pd.concat([classe1,classe3,classe2],axis=1))
+df_classes.columns = ['Renda Fixa', 'Exterior', 'Variavel BR']
+df_classes
+
+df_classes_norm = (df_classes.pct_change().dropna()+1).cumprod()
+df_classes_norm.plot(figsize=(16,9))
+
+df_classes = df_classes.loc['2018-01-01':]
+
+janela = 90
+
+a = df_classes.pct_change()['Renda Fixa'].rolling(janela).corr(df_classes['Exterior'])
+
+b= df_classes.pct_change()['Renda Fixa'].rolling(janela).corr(df_classes['Variavel BR'])
+
+c = df_classes.pct_change()['Variavel BR'].rolling(janela).corr(df_classes['Exterior'])
+
+df = pd.DataFrame(pd.concat([a,b,c],axis=1))
+df.columns= (['RF/EXT','RF/VAR BR','VAR BR/EXT'])
+df.plot(figsize=(21,9))
+
+matriz_correlacao = df_classes.pct_change().dropna().corr()
+
+mask = np.triu(np.ones_like(matriz_correlacao,dtype=bool),k = 1)
+
+sns.heatmap(matriz_correlacao, mask= mask, cmap= 'coolwarm', annot=True, fmt = '.2f')
+plt.show()
