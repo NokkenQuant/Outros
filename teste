@@ -81,3 +81,13 @@ mask = np.triu(np.ones_like(matriz_correlacao,dtype=bool),k = 1)
 
 sns.heatmap(matriz_correlacao, mask= mask, cmap= 'coolwarm', annot=True, fmt = '.2f')
 plt.show()
+
+
+base_correl = base.pct_change().dropna().corr()
+
+
+fig,ax = plt.subplots(figsize=(16,9))
+mask2 = np.triu(np.ones_like(base_correl,dtype=bool),k = 1)
+
+sns.heatmap(base_correl, mask= mask2, cmap= 'Blues', annot=True, fmt = '.2f')
+plt.show()
